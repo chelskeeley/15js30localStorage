@@ -28,8 +28,55 @@
 <script>
   const addItems = document.querySelector('.add-items');
   const itemsList = document.querySelector('.plates');
-  const items = [];
 
+  //on page load, the items const will either be what is gotten from local storage, OR if there is nothing there, it will be an empty array
+  const items = JSON.parse(localStorage.getItem('items')) || [];
+
+
+  function addItem(e){
+    e.preventDefault();
+    const text = (this.querySelector('[name=item]')).value;
+    const item = {
+      text,
+      done: false
+    }
+    items.push(item);
+    populateList(items, itemsList);
+    //have to use stringify because the local storage only stores strings, not objects. that is why we have to parse on page load to get the data back out of local storage
+    localStorage.setItem('items', JSON.stringify(items));
+    this.reset();
+  }
+
+  function populateList(plates = [], platesList){
+    platesList.innerHTML = plates.map((plate, i) =>{
+      return `
+        <li>
+        <input type='checkbox' data-index=${i} id='item${i}' ${plate.done ? 'checked' : ''}/>
+          <label for='item${i}'>${plate.text}</label>
+        </li>
+      `;
+    }).join('');
+  }
+
+  function toggleDone(e){
+    //we have to make sure the clicked event target matches exactly the part we want! Because we are adding the event listener on the ul due to event delegation, the click could be on the inout, the li, the label etc
+    if(!e.target.matches('input')) return;
+    // console.log(e.target);
+    const el = e.target;
+    //this will find the index number of the item we are checking (that we made in the populate list fx in the map)
+    const index = el.dataset.index;
+    //this will flip flop between changing the done boolean in the object between true and false each time it is checked or unchecked
+    items[index].done = !items[index].done;
+    //this will update the list on the page by calling populate list again
+    populateList(items, itemsList);
+    
+  }
+
+
+  addItems.addEventListener('submit', addItem);
+  itemsList.addEventListener('click', toggleDone);
+
+  populateList(items, itemsList);
 </script>
 
 
